@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import '../providers/task_provider.dart';
 import '../models/task.dart';
 import '../theme.dart';
-import '../screens/edit_task_screen.dart'; // màn hình sửa
+import '../screens/edit_task_screen.dart';
 
 class TaskTile extends StatelessWidget {
   final Task task;
@@ -15,8 +15,14 @@ class TaskTile extends StatelessWidget {
     final prov = context.read<TaskProvider>();
     final time =
         '${DateFormat.Hm().format(task.start)} - ${DateFormat.Hm().format(task.end)}';
-    final isHighlight =
-        DateFormat.Hm().format(task.start) == '10:00' && task.title.startsWith('Attend'); // ví dụ highlight
+
+    // Trạng thái thời gian
+    final now = DateTime.now();
+    final isOngoing = now.isAfter(task.start) && now.isBefore(task.end);
+    final isOverdue = now.isAfter(task.end) && !task.done;
+
+    final Color? accent =
+    isOngoing ? AppColors.primary : (isOverdue ? Colors.redAccent : null);
 
     Future<void> _confirmDelete() async {
       final ok = await showDialog<bool>(
@@ -25,14 +31,16 @@ class TaskTile extends StatelessWidget {
           title: const Text('Xoá task?'),
           content: const Text('Thao tác này không thể hoàn tác.'),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Huỷ')),
-            TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Xoá')),
+            TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Huỷ')),
+            TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('Xoá')),
           ],
         ),
       );
-      if (ok == true) {
-        prov.deleteTask(task.id);
-      }
+      if (ok == true) prov.deleteTask(task.id);
     }
 
     return Material(
@@ -40,16 +48,20 @@ class TaskTile extends StatelessWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(20),
         onTap: () {
-          // mở màn hình sửa
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (_) => EditTaskScreen(taskId: task.id)),
+            MaterialPageRoute(
+              builder: (_) => EditTaskScreen(taskId: task.id),
+            ),
           );
         },
-        onLongPress: _confirmDelete, // nhấn giữ để xoá nhanh
+        onLongPress: _confirmDelete,
         child: Container(
           decoration: neoCard().copyWith(
-            color: isHighlight ? AppColors.primary : AppColors.card,
+            color: AppColors.card, // bỏ highlight nền
+            border: accent != null
+                ? Border(left: BorderSide(color: accent, width: 6))
+                : null,
           ),
           margin: const EdgeInsets.symmetric(vertical: 8),
           padding: const EdgeInsets.all(14),
@@ -60,7 +72,7 @@ class TaskTile extends StatelessWidget {
                 child: Text(
                   time,
                   style: TextStyle(
-                    color: isHighlight ? Colors.white : AppColors.subtle,
+                    color: isOverdue ? Colors.redAccent : AppColors.subtle,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -72,16 +84,16 @@ class TaskTile extends StatelessWidget {
                   children: [
                     Text(
                       task.title,
-                      style: TextStyle(
-                        color: isHighlight ? Colors.white : AppColors.text,
+                      style: const TextStyle(
+                        color: AppColors.text,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       task.description,
-                      style: TextStyle(
-                        color: isHighlight ? Colors.white.withOpacity(.9) : AppColors.subtle,
+                      style: const TextStyle(
+                        color: AppColors.subtle,
                         fontSize: 12,
                       ),
                     ),
@@ -91,12 +103,9 @@ class TaskTile extends StatelessWidget {
               Checkbox(
                 value: task.done,
                 onChanged: (_) => prov.toggleDone(task.id),
-                side: BorderSide(
-                  color: isHighlight ? Colors.white : AppColors.primary,
-                  width: 2,
-                ),
+                side: const BorderSide(color: AppColors.primary, width: 2),
                 checkColor: Colors.white,
-                activeColor: isHighlight ? Colors.white : AppColors.primary,
+                activeColor: AppColors.primary,
               ),
             ],
           ),
