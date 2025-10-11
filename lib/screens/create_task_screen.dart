@@ -5,7 +5,8 @@ import '../providers/task_provider.dart';
 import '../widgets/activity_tile.dart';
 import '../theme.dart';
 import 'create_task_detail_screen.dart';
-import '../widgets/day_pill.dart'; // đường dẫn đúng theo dự án của bạn
+import '../widgets/day_pill.dart';
+import '../models/activity.dart';
 
 class CreateTaskScreen extends StatelessWidget {
   const CreateTaskScreen({super.key});
@@ -53,21 +54,34 @@ class CreateTaskScreen extends StatelessWidget {
             const Text('Choose Activity', style: TextStyle(fontWeight: FontWeight.w700)),
             const SizedBox(height: 6),
 
+            // ⬇️ Danh sách Activity với taskCount tính theo dữ liệu thật
             Expanded(
               child: ListView(
-                children: prov.activities
-                    .map((a) => ActivityTile(
-                  activity: a,
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => CreateTaskDetailScreen(defaultActivity: a),
+                children: prov.activities.map((a) {
+                  // Đếm số task thuộc activity này (mọi ngày)
+                  final count = prov.tasksForActivity(a.id).length;
+
+                  // Tạo một bản "copy" Activity với taskCount động để ActivityTile hiển thị
+                  final activityWithRealCount = Activity(
+                    id: a.id,
+                    name: a.name,
+                    icon: a.icon,
+                    taskCount: count,
+                  );
+
+                  return ActivityTile(
+                    activity: activityWithRealCount,
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => CreateTaskDetailScreen(defaultActivity: a),
+                      ),
                     ),
-                  ),
-                ))
-                    .toList(),
+                  );
+                }).toList(),
               ),
             ),
+
             Align(
               alignment: Alignment.bottomRight,
               child: FloatingActionButton(

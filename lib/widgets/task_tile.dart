@@ -16,13 +16,29 @@ class TaskTile extends StatelessWidget {
     final time =
         '${DateFormat.Hm().format(task.start)} - ${DateFormat.Hm().format(task.end)}';
 
-    // Trạng thái thời gian
+    // trạng thái
     final now = DateTime.now();
     final isOngoing = now.isAfter(task.start) && now.isBefore(task.end);
     final isOverdue = now.isAfter(task.end) && !task.done;
-
     final Color? accent =
     isOngoing ? AppColors.primary : (isOverdue ? Colors.redAccent : null);
+
+    // style khi đã hoàn thành
+    final bool done = task.done;
+    final titleStyle = TextStyle(
+      color: done ? AppColors.subtle : AppColors.text,
+      fontWeight: FontWeight.w700,
+      decoration: done ? TextDecoration.lineThrough : TextDecoration.none,
+      decorationThickness: 2,
+      decorationColor: AppColors.subtle,
+    );
+    final descStyle = TextStyle(
+      color: done ? AppColors.subtle.withOpacity(.9) : AppColors.subtle,
+      fontSize: 12,
+      decoration: done ? TextDecoration.lineThrough : TextDecoration.none,
+      decorationThickness: 1.5,
+      decorationColor: AppColors.subtle,
+    );
 
     Future<void> _confirmDelete() async {
       final ok = await showDialog<bool>(
@@ -31,12 +47,8 @@ class TaskTile extends StatelessWidget {
           title: const Text('Xoá task?'),
           content: const Text('Thao tác này không thể hoàn tác.'),
           actions: [
-            TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: const Text('Huỷ')),
-            TextButton(
-                onPressed: () => Navigator.pop(context, true),
-                child: const Text('Xoá')),
+            TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Huỷ')),
+            TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Xoá')),
           ],
         ),
       );
@@ -50,15 +62,13 @@ class TaskTile extends StatelessWidget {
         onTap: () {
           Navigator.push(
             context,
-            MaterialPageRoute(
-              builder: (_) => EditTaskScreen(taskId: task.id),
-            ),
+            MaterialPageRoute(builder: (_) => EditTaskScreen(taskId: task.id)),
           );
         },
         onLongPress: _confirmDelete,
         child: Container(
           decoration: neoCard().copyWith(
-            color: AppColors.card, // bỏ highlight nền
+            color: AppColors.card,
             border: accent != null
                 ? Border(left: BorderSide(color: accent, width: 6))
                 : null,
@@ -74,6 +84,8 @@ class TaskTile extends StatelessWidget {
                   style: TextStyle(
                     color: isOverdue ? Colors.redAccent : AppColors.subtle,
                     fontWeight: FontWeight.w600,
+                    decoration: done ? TextDecoration.lineThrough : TextDecoration.none,
+                    decorationColor: AppColors.subtle,
                   ),
                 ),
               ),
@@ -82,20 +94,16 @@ class TaskTile extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      task.title,
-                      style: const TextStyle(
-                        color: AppColors.text,
-                        fontWeight: FontWeight.w700,
-                      ),
+                    AnimatedDefaultTextStyle(
+                      duration: const Duration(milliseconds: 150),
+                      style: titleStyle,
+                      child: Text(task.title),
                     ),
                     const SizedBox(height: 2),
-                    Text(
-                      task.description,
-                      style: const TextStyle(
-                        color: AppColors.subtle,
-                        fontSize: 12,
-                      ),
+                    AnimatedDefaultTextStyle(
+                      duration: const Duration(milliseconds: 150),
+                      style: descStyle,
+                      child: Text(task.description),
                     ),
                   ],
                 ),

@@ -17,20 +17,32 @@ class CreateTaskDetailScreen extends StatefulWidget {
 
 class _CreateTaskDetailScreenState extends State<CreateTaskDetailScreen> {
   late Activity selectedActivity;
-  DateTime focusedDay = DateTime.now();
-  DateTime selectedDay = DateTime.now();
+
+  // ⬇️ Lấy từ Provider, KHÔNG khởi tạo = now
+  late DateTime focusedDay;
+  late DateTime selectedDay;
 
   final titleCtrl = TextEditingController();
   final descCtrl = TextEditingController();
 
   // 🕒 trạng thái giờ
   TimeOfDay? startTime = const TimeOfDay(hour: 8, minute: 0);
-  TimeOfDay? endTime = const TimeOfDay(hour: 9, minute: 0);
+  TimeOfDay? endTime   = const TimeOfDay(hour: 9, minute: 0);
 
   @override
   void initState() {
     super.initState();
     selectedActivity = widget.defaultActivity;
+  }
+
+  // Đọc selectedDay hiện tại của app từ Provider
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final d = context.read<TaskProvider>().selectedDay;
+    // chuẩn hoá về 00:00 để tránh lệch múi giờ
+    focusedDay  = DateTime(d.year, d.month, d.day);
+    selectedDay = focusedDay;
   }
 
   // Helper: định dạng giờ
@@ -43,7 +55,6 @@ class _CreateTaskDetailScreenState extends State<CreateTaskDetailScreen> {
     );
     if (picked != null) {
       setState(() => startTime = picked);
-      // nếu trùng/nhỏ hơn end, tự đẩy end lên +30'
       if (endTime != null) {
         final st = Duration(hours: picked.hour, minutes: picked.minute);
         final et = Duration(hours: endTime!.hour, minutes: endTime!.minute);
@@ -96,7 +107,7 @@ class _CreateTaskDetailScreenState extends State<CreateTaskDetailScreen> {
                     d.day == selectedDay.day,
                 onDaySelected: (sel, foc) => setState(() {
                   selectedDay = sel;
-                  focusedDay = foc;
+                  focusedDay  = foc;
                 }),
                 headerStyle: const HeaderStyle(formatButtonVisible: false, titleCentered: true),
                 calendarStyle: const CalendarStyle(
@@ -183,10 +194,7 @@ class _CreateTaskDetailScreenState extends State<CreateTaskDetailScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           const Text('Start Time', style: TextStyle(color: Colors.black54)),
-                          Text(
-                            _fmt(startTime),
-                            style: const TextStyle(fontWeight: FontWeight.w700),
-                          ),
+                          Text(_fmt(startTime), style: const TextStyle(fontWeight: FontWeight.w700)),
                         ],
                       ),
                     ),
@@ -207,10 +215,7 @@ class _CreateTaskDetailScreenState extends State<CreateTaskDetailScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           const Text('End Time', style: TextStyle(color: Colors.black54)),
-                          Text(
-                            _fmt(endTime),
-                            style: const TextStyle(fontWeight: FontWeight.w700),
-                          ),
+                          Text(_fmt(endTime), style: const TextStyle(fontWeight: FontWeight.w700)),
                         ],
                       ),
                     ),
@@ -237,7 +242,7 @@ class _CreateTaskDetailScreenState extends State<CreateTaskDetailScreen> {
                 }
 
                 final startDt = _merge(selectedDay, st);
-                final endDt = _merge(selectedDay, et);
+                final endDt   = _merge(selectedDay, et);
 
                 prov.addTask(Task(
                   id: DateTime.now().millisecondsSinceEpoch.toString(),
