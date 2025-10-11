@@ -18,16 +18,14 @@ class CreateTaskDetailScreen extends StatefulWidget {
 class _CreateTaskDetailScreenState extends State<CreateTaskDetailScreen> {
   late Activity selectedActivity;
 
-  // ⬇️ Lấy từ Provider, KHÔNG khởi tạo = now
   late DateTime focusedDay;
   late DateTime selectedDay;
 
   final titleCtrl = TextEditingController();
   final descCtrl = TextEditingController();
 
-  // 🕒 trạng thái giờ
   TimeOfDay? startTime = const TimeOfDay(hour: 8, minute: 0);
-  TimeOfDay? endTime   = const TimeOfDay(hour: 9, minute: 0);
+  TimeOfDay? endTime = const TimeOfDay(hour: 9, minute: 0);
 
   @override
   void initState() {
@@ -35,17 +33,14 @@ class _CreateTaskDetailScreenState extends State<CreateTaskDetailScreen> {
     selectedActivity = widget.defaultActivity;
   }
 
-  // Đọc selectedDay hiện tại của app từ Provider
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     final d = context.read<TaskProvider>().selectedDay;
-    // chuẩn hoá về 00:00 để tránh lệch múi giờ
-    focusedDay  = DateTime(d.year, d.month, d.day);
+    focusedDay = DateTime(d.year, d.month, d.day);
     selectedDay = focusedDay;
   }
 
-  // Helper: định dạng giờ
   String _fmt(TimeOfDay? t) => t == null ? '--:--' : t.format(context);
 
   Future<void> _pickStart() async {
@@ -53,6 +48,7 @@ class _CreateTaskDetailScreenState extends State<CreateTaskDetailScreen> {
       context: context,
       initialTime: startTime ?? TimeOfDay.now(),
     );
+    if (!mounted) return;
     if (picked != null) {
       setState(() => startTime = picked);
       if (endTime != null) {
@@ -60,8 +56,10 @@ class _CreateTaskDetailScreenState extends State<CreateTaskDetailScreen> {
         final et = Duration(hours: endTime!.hour, minutes: endTime!.minute);
         if (et <= st) {
           final newEt = st + const Duration(minutes: 30);
-          setState(() => endTime =
-              TimeOfDay(hour: newEt.inHours % 24, minute: newEt.inMinutes % 60));
+          setState(() => endTime = TimeOfDay(
+            hour: newEt.inHours % 24,
+            minute: newEt.inMinutes % 60,
+          ));
         }
       }
     }
@@ -72,12 +70,46 @@ class _CreateTaskDetailScreenState extends State<CreateTaskDetailScreen> {
       context: context,
       initialTime: endTime ?? (startTime ?? TimeOfDay.now()),
     );
+    if (!mounted) return;
     if (picked != null) setState(() => endTime = picked);
   }
 
-  // Chuyển TimeOfDay -> DateTime trong ngày đã chọn
   DateTime _merge(DateTime day, TimeOfDay t) =>
       DateTime(day.year, day.month, day.day, t.hour, t.minute);
+
+  Future<void> _createTask() async {
+    final prov = context.read<TaskProvider>();
+
+    final st = startTime ?? TimeOfDay.now();
+    final et = endTime ?? TimeOfDay(hour: (st.hour + 1) % 24, minute: st.minute);
+
+    final sDur = Duration(hours: st.hour, minutes: st.minute);
+    final eDur = Duration(hours: et.hour, minutes: et.minute);
+
+    if (eDur <= sDur) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('End Time must be after Start Time')),
+      );
+      return;
+    }
+
+    final startDt = _merge(selectedDay, st);
+    final endDt = _merge(selectedDay, et);
+
+    prov.addTask(Task(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      date: selectedDay,
+      title: titleCtrl.text.isEmpty ? selectedActivity.name : titleCtrl.text,
+      description: descCtrl.text,
+      start: startDt,
+      end: endDt,
+      activityId: selectedActivity.id,
+    ));
+
+    if (!mounted) return;
+    Navigator.pop(context);
+    Navigator.pop(context);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -86,8 +118,16 @@ class _CreateTaskDetailScreenState extends State<CreateTaskDetailScreen> {
     return Scaffold(
       appBar: AppBar(
         leading: const BackButton(),
-        title: const Text('Create Task', style: TextStyle(fontWeight: FontWeight.w700)),
-        actions: const [Padding(padding: EdgeInsets.only(right: 12), child: Icon(Icons.timer_outlined))],
+        title: const Text(
+          'Create Task',
+          style: TextStyle(fontWeight: FontWeight.w700),
+        ),
+        actions: const [
+          Padding(
+            padding: EdgeInsets.only(right: 12),
+            child: Icon(Icons.timer_outlined),
+          )
+        ],
       ),
       body: SafeArea(
         child: ListView(
@@ -105,21 +145,22 @@ class _CreateTaskDetailScreenState extends State<CreateTaskDetailScreen> {
                 d.year == selectedDay.year &&
                     d.month == selectedDay.month &&
                     d.day == selectedDay.day,
-                onDaySelected: (sel, foc) => setState(() {
-                  selectedDay = sel;
-                  focusedDay  = foc;
-                }),
-                headerStyle: const HeaderStyle(formatButtonVisible: false, titleCentered: true),
+                onDaySelected: (sel, foc) =>
+                    setState(() => {selectedDay = sel, focusedDay = foc}),
+                headerStyle: const HeaderStyle(
+                    formatButtonVisible: false, titleCentered: true),
                 calendarStyle: const CalendarStyle(
-                  todayDecoration: BoxDecoration(color: AppColors.primarySoft, shape: BoxShape.circle),
-                  selectedDecoration: BoxDecoration(color: AppColors.primary, shape: BoxShape.circle),
+                  todayDecoration: BoxDecoration(
+                      color: AppColors.primarySoft, shape: BoxShape.circle),
+                  selectedDecoration: BoxDecoration(
+                      color: AppColors.primary, shape: BoxShape.circle),
                   selectedTextStyle: TextStyle(color: Colors.white),
                 ),
               ),
             ),
             const SizedBox(height: 14),
 
-            // Activity dropdown (giống thẻ tím)
+            // Activity dropdown
             Container(
               decoration: neoCard().copyWith(color: AppColors.primarySoft),
               child: ListTile(
@@ -127,7 +168,10 @@ class _CreateTaskDetailScreenState extends State<CreateTaskDetailScreen> {
                   backgroundColor: Colors.white,
                   child: Icon(selectedActivity.icon, color: AppColors.primary),
                 ),
-                title: Text(selectedActivity.name, style: const TextStyle(fontWeight: FontWeight.w700)),
+                title: Text(
+                  selectedActivity.name,
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
                 trailing: const Icon(Icons.expand_more),
                 onTap: () async {
                   final chosen = await showModalBottomSheet<Activity>(
@@ -135,14 +179,18 @@ class _CreateTaskDetailScreenState extends State<CreateTaskDetailScreen> {
                     showDragHandle: true,
                     builder: (_) => ListView(
                       children: prov.activities
-                          .map((a) => ListTile(
-                        leading: Icon(a.icon, color: AppColors.primary),
-                        title: Text(a.name),
-                        onTap: () => Navigator.pop(context, a),
-                      ))
+                          .map(
+                            (a) => ListTile(
+                          leading:
+                          Icon(a.icon, color: AppColors.primary),
+                          title: Text(a.name),
+                          onTap: () async => Navigator.pop(context, a),
+                        ),
+                      )
                           .toList(),
                     ),
                   );
+                  if (!mounted) return;
                   if (chosen != null) setState(() => selectedActivity = chosen);
                 },
               ),
@@ -156,9 +204,8 @@ class _CreateTaskDetailScreenState extends State<CreateTaskDetailScreen> {
                 filled: true,
                 fillColor: Colors.white,
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
-                  borderSide: BorderSide.none,
-                ),
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: BorderSide.none),
               ),
             ),
             const SizedBox(height: 10),
@@ -170,14 +217,13 @@ class _CreateTaskDetailScreenState extends State<CreateTaskDetailScreen> {
                 filled: true,
                 fillColor: Colors.white,
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
-                  borderSide: BorderSide.none,
-                ),
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: BorderSide.none),
               ),
             ),
             const SizedBox(height: 12),
 
-            // 🕒 Time pickers
+            // Time pickers
             Row(
               children: [
                 Expanded(
@@ -185,16 +231,19 @@ class _CreateTaskDetailScreenState extends State<CreateTaskDetailScreen> {
                     borderRadius: BorderRadius.circular(14),
                     onTap: _pickStart,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 14, horizontal: 16),
                       decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(14),
-                      ),
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(14)),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text('Start Time', style: TextStyle(color: Colors.black54)),
-                          Text(_fmt(startTime), style: const TextStyle(fontWeight: FontWeight.w700)),
+                          const Text('Start Time',
+                              style: TextStyle(color: Colors.black54)),
+                          Text(_fmt(startTime),
+                              style:
+                              const TextStyle(fontWeight: FontWeight.w700)),
                         ],
                       ),
                     ),
@@ -206,16 +255,19 @@ class _CreateTaskDetailScreenState extends State<CreateTaskDetailScreen> {
                     borderRadius: BorderRadius.circular(14),
                     onTap: _pickEnd,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 14, horizontal: 16),
                       decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(14),
-                      ),
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(14)),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text('End Time', style: TextStyle(color: Colors.black54)),
-                          Text(_fmt(endTime), style: const TextStyle(fontWeight: FontWeight.w700)),
+                          const Text('End Time',
+                              style: TextStyle(color: Colors.black54)),
+                          Text(_fmt(endTime),
+                              style:
+                              const TextStyle(fontWeight: FontWeight.w700)),
                         ],
                       ),
                     ),
@@ -225,37 +277,10 @@ class _CreateTaskDetailScreenState extends State<CreateTaskDetailScreen> {
             ),
             const SizedBox(height: 16),
 
+            // Nút tạo task
             PrimaryButton(
               label: 'Create Task',
-              onPressed: () {
-                // Validate thời gian
-                final st = startTime ?? TimeOfDay.now();
-                final et = endTime ?? TimeOfDay(hour: (st.hour + 1) % 24, minute: st.minute);
-
-                final sDur = Duration(hours: st.hour, minutes: st.minute);
-                final eDur = Duration(hours: et.hour, minutes: et.minute);
-                if (eDur <= sDur) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('End Time must be after Start Time')),
-                  );
-                  return;
-                }
-
-                final startDt = _merge(selectedDay, st);
-                final endDt   = _merge(selectedDay, et);
-
-                prov.addTask(Task(
-                  id: DateTime.now().millisecondsSinceEpoch.toString(),
-                  date: selectedDay,
-                  title: titleCtrl.text.isEmpty ? selectedActivity.name : titleCtrl.text,
-                  description: descCtrl.text,
-                  start: startDt,
-                  end: endDt,
-                  activityId: selectedActivity.id,
-                ));
-                Navigator.pop(context);
-                Navigator.pop(context);
-              },
+              onPressed: () async => _createTask(),
             ),
           ],
         ),

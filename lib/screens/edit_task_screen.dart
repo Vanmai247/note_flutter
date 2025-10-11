@@ -51,7 +51,11 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
       DateTime(d.year, d.month, d.day, t.hour, t.minute);
 
   Future<void> _pickStart() async {
-    final picked = await showTimePicker(context: context, initialTime: startTime ?? TimeOfDay.now());
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: startTime ?? TimeOfDay.now(),
+    );
+    if (!mounted) return;
     if (picked != null) {
       setState(() => startTime = picked);
       if (endTime != null) {
@@ -60,7 +64,9 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
         if (et <= st) {
           final newEt = st + const Duration(minutes: 30);
           setState(() => endTime = TimeOfDay(
-              hour: newEt.inHours % 24, minute: newEt.inMinutes % 60));
+            hour: newEt.inHours % 24,
+            minute: newEt.inMinutes % 60,
+          ));
         }
       }
     }
@@ -68,7 +74,10 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
 
   Future<void> _pickEnd() async {
     final picked = await showTimePicker(
-        context: context, initialTime: endTime ?? (startTime ?? TimeOfDay.now()));
+      context: context,
+      initialTime: endTime ?? (startTime ?? TimeOfDay.now()),
+    );
+    if (!mounted) return;
     if (picked != null) setState(() => endTime = picked);
   }
 
@@ -113,6 +122,7 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
         ],
       ),
     );
+    if (!mounted) return;
     if (ok == true) {
       context.read<TaskProvider>().deleteTask(original.id);
       if (mounted) Navigator.pop(context); // thoát màn sửa
@@ -130,7 +140,7 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
         actions: [
           IconButton(
             tooltip: 'Delete',
-            onPressed: _confirmDelete,
+            onPressed: () => _confirmDelete(), // 👈 bọc Future vào lambda sync
             icon: const Icon(Icons.delete_outline),
           ),
           const SizedBox(width: 6),
@@ -152,7 +162,10 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
                 d.year == selectedDay.year &&
                     d.month == selectedDay.month &&
                     d.day == selectedDay.day,
-                onDaySelected: (sel, foc) => setState(() { selectedDay = sel; focusedDay = foc; }),
+                onDaySelected: (sel, foc) => setState(() {
+                  selectedDay = sel;
+                  focusedDay = foc;
+                }),
                 headerStyle: const HeaderStyle(formatButtonVisible: false, titleCentered: true),
                 calendarStyle: const CalendarStyle(
                   todayDecoration: BoxDecoration(color: AppColors.primarySoft, shape: BoxShape.circle),
@@ -171,8 +184,10 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
                   backgroundColor: Colors.white,
                   child: Icon(prov.byActivityId(selectedActivity.id).icon, color: AppColors.primary),
                 ),
-                title: Text(prov.byActivityId(selectedActivity.id).name,
-                    style: const TextStyle(fontWeight: FontWeight.w700)),
+                title: Text(
+                  prov.byActivityId(selectedActivity.id).name,
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
                 trailing: const Icon(Icons.expand_more),
                 onTap: () async {
                   final chosen = await showModalBottomSheet<Activity>(
@@ -183,11 +198,12 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
                           .map((a) => ListTile(
                         leading: Icon(a.icon, color: AppColors.primary),
                         title: Text(a.name),
-                        onTap: () => Navigator.pop(context, a),
+                        onTap: () async => Navigator.pop(context, a), // 👈 trả Future
                       ))
                           .toList(),
                     ),
                   );
+                  if (!mounted) return;
                   if (chosen != null) setState(() => selectedActivity = chosen);
                 },
               ),
@@ -200,7 +216,10 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
                 hintText: 'Name',
                 filled: true,
                 fillColor: Colors.white,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: BorderSide.none,
+                ),
               ),
             ),
             const SizedBox(height: 10),
@@ -211,7 +230,10 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
                 hintText: 'Task Description...',
                 filled: true,
                 fillColor: Colors.white,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: BorderSide.none,
+                ),
               ),
             ),
             const SizedBox(height: 12),
@@ -258,7 +280,11 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
             ),
             const SizedBox(height: 16),
 
-            PrimaryButton(label: 'Save Changes', onPressed: _save),
+            // Nếu PrimaryButton đã hỗ trợ sync+async như mình hướng dẫn, truyền trực tiếp _save là được.
+            PrimaryButton(
+              label: 'Save Changes',
+              onPressed: () async => _save(), // đảm bảo kiểu FutureOr<void>
+            ),
           ],
         ),
       ),

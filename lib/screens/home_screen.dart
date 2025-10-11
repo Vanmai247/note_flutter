@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_auth/firebase_auth.dart';   // 👈 thêm
 import '../providers/task_provider.dart';
 import '../theme.dart';
 import '../widgets/task_tile.dart';
 import '../widgets/date_pills.dart';
-import '../widgets/app_drawer.dart';        // 👈 thêm
+import '../widgets/app_drawer.dart';
 import 'create_task_screen.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -15,10 +16,11 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final prov = context.watch<TaskProvider>();
     final tasks = prov.tasksFor(prov.selectedDay);
+    final user  = FirebaseAuth.instance.currentUser;
 
     return Scaffold(
-      drawer: const AppDrawer(),            // 👈 sidebar trái
-      body: Builder(                        // 👈 để gọi openDrawer()
+      drawer: const AppDrawer(),
+      body: Builder(
         builder: (ctx) => SafeArea(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(18, 12, 18, 0),
@@ -28,7 +30,7 @@ class HomeScreen extends StatelessWidget {
                 // Header
                 Row(
                   children: [
-                    IconButton(             // 👈 nút mở sidebar
+                    IconButton(
                       icon: const Icon(Icons.menu),
                       onPressed: () => Scaffold.of(ctx).openDrawer(),
                     ),
@@ -38,7 +40,24 @@ class HomeScreen extends StatelessWidget {
                       style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 18),
                     ),
                     const Spacer(),
-                    const Icon(Icons.timer_outlined),
+
+                    // 👇 Nút menu (có Đăng xuất)
+                    PopupMenuButton<String>(
+                      icon: const Icon(Icons.more_vert),
+                      onSelected: (v) async {
+                        if (v == 'logout') {
+                          await FirebaseAuth.instance.signOut();
+                          // Stream authStateChanges() trong main.dart sẽ tự đưa về Login
+                        }
+                      },
+                      itemBuilder: (_) => [
+                        if (user != null)
+                          const PopupMenuItem(
+                            value: 'logout',
+                            child: Text('Đăng xuất'),
+                          ),
+                      ],
+                    ),
                   ],
                 ),
                 const SizedBox(height: 18),
@@ -61,6 +80,11 @@ class HomeScreen extends StatelessWidget {
                               '${tasks.length} Tasks',
                               style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 18),
                             ),
+                            if (user != null) ...[
+                              const SizedBox(height: 6),
+                              Text(user.email ?? '',
+                                  style: const TextStyle(color: Colors.white70, fontSize: 12)),
+                            ],
                           ],
                         ),
                       ),
