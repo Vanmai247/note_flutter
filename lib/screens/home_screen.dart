@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'package:firebase_auth/firebase_auth.dart';   // 👈 thêm
+import 'package:firebase_auth/firebase_auth.dart';
 import '../providers/task_provider.dart';
 import '../theme.dart';
 import '../widgets/task_tile.dart';
@@ -41,7 +41,7 @@ class HomeScreen extends StatelessWidget {
                     ),
                     const Spacer(),
 
-                    // 👇 Nút menu (có Đăng xuất)
+                    //Nút menu (có Đăng xuất)
                     PopupMenuButton<String>(
                       icon: const Icon(Icons.more_vert),
                       onSelected: (v) async {

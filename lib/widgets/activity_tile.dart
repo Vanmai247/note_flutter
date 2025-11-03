@@ -4,6 +4,8 @@ import '../theme.dart';
 
 class ActivityTile extends StatelessWidget {
   final Activity activity;
+
+
   final VoidCallback onTap;
   const ActivityTile({super.key, required this.activity, required this.onTap});
 

@@ -3,7 +3,7 @@ import '../theme.dart';
 
 class PrimaryButton extends StatelessWidget {
   final String label;
-  final Future<void> Function()? onPressed; // 👈 cho phép async
+  final Future<void> Function()? onPressed;
   const PrimaryButton({
     super.key,
     required this.label,

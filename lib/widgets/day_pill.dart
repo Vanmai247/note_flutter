@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
 class DayPill extends StatelessWidget {
-  final String line1; // ví dụ: '26'
-  final String line2; // ví dụ: 'Fri'
+  final String line1;
+  final String line2;
   final bool selected;
   final VoidCallback onTap;
 
@@ -31,7 +31,7 @@ class DayPill extends StatelessWidget {
           boxShadow: [
             if (!selected)
               BoxShadow(
-                color: Colors.black.withOpacity(.06),
+                color: Colors.blue.withValues(alpha: 0.06),
                 blurRadius: 12,
                 offset: const Offset(0, 6),
               ),
@@ -52,7 +52,7 @@ class DayPill extends StatelessWidget {
             const SizedBox(height: 2),
             Text(line2,
                 style: TextStyle(
-                  color: selected ? Colors.white.withOpacity(.9) : const Color(0xFF9AA0A6),
+                  color: selected ? Colors.blue.withValues(alpha: 0.5) : const Color(0xFF9AA0A6),
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
                 )),

@@ -140,7 +140,7 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
         actions: [
           IconButton(
             tooltip: 'Delete',
-            onPressed: () => _confirmDelete(), // 👈 bọc Future vào lambda sync
+            onPressed: () => _confirmDelete(),
             icon: const Icon(Icons.delete_outline),
           ),
           const SizedBox(width: 6),
@@ -198,7 +198,7 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
                           .map((a) => ListTile(
                         leading: Icon(a.icon, color: AppColors.primary),
                         title: Text(a.name),
-                        onTap: () async => Navigator.pop(context, a), // 👈 trả Future
+                        onTap: () async => Navigator.pop(context, a),
                       ))
                           .toList(),
                     ),
@@ -280,7 +280,7 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
             ),
             const SizedBox(height: 16),
 
-            // Nếu PrimaryButton đã hỗ trợ sync+async như mình hướng dẫn, truyền trực tiếp _save là được.
+
             PrimaryButton(
               label: 'Save Changes',
               onPressed: () async => _save(), // đảm bảo kiểu FutureOr<void>

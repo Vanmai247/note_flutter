@@ -13,8 +13,10 @@ class RegisterScreen extends StatefulWidget {
 class _RegisterScreenState extends State<RegisterScreen> {
   final nameCtrl  = TextEditingController();
   final emailCtrl = TextEditingController();
+  final phoneCtrl = TextEditingController();
   final passCtrl  = TextEditingController();
   final pass2Ctrl = TextEditingController();
+
 
   bool showPass   = false;
   bool showPass2  = false;
@@ -24,6 +26,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   void dispose() {
     nameCtrl.dispose();
     emailCtrl.dispose();
+    phoneCtrl.dispose();
     passCtrl.dispose();
     pass2Ctrl.dispose();
     super.dispose();
@@ -32,12 +35,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Future<void> _register() async {
     final name  = nameCtrl.text.trim();
     final email = emailCtrl.text.trim();
+    final phone = phoneCtrl.text.trim();
     final p1    = passCtrl.text.trim();
     final p2    = pass2Ctrl.text.trim();
 
     if (name.isEmpty || email.isEmpty || p1.isEmpty || p2.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Vui lòng nhập đầy đủ thông tin')),
+      );
+      return;
+    }
+    if (phone.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Vui lòng nhập số điện thoại')),
       );
       return;
     }
@@ -69,6 +79,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         'uid': uid,
         'name': name,
         'email': email,
+        'phone': phone,
         'createdAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
 
@@ -137,6 +148,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ),
           ),
           const SizedBox(height: 12),
+
+          TextField(
+            controller: phoneCtrl,
+            keyboardType: TextInputType.phone,
+            decoration: InputDecoration(
+              hintText: 'Số điện thoại',
+              filled: true,
+              fillColor: Colors.white,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: BorderSide.none,
+              ),
+              prefixIcon: const Icon(Icons.phone_outlined),
+            ),
+          ),
+          const SizedBox(height: 12),
+
           TextField(
             controller: passCtrl,
             obscureText: !showPass,
