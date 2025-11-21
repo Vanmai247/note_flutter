@@ -47,12 +47,31 @@ class TaskTile extends StatelessWidget {
           title: const Text('Xoá task?'),
           content: const Text('Thao tác này không thể hoàn tác.'),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Huỷ')),
-            TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Xoá')),
+            TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Huỷ')),
+            TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('Xoá')),
           ],
         ),
       );
-      if (ok == true) prov.deleteTask(task.id);
+      if (ok == true) {
+        try {
+          await prov.deleteTask(task.id);
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Đã xoá')),
+            );
+          }
+        } catch (e) {
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Xoá thất bại: $e')),
+            );
+          }
+        }
+      }
     }
 
     return Material(
@@ -84,7 +103,8 @@ class TaskTile extends StatelessWidget {
                   style: TextStyle(
                     color: isOverdue ? Colors.redAccent : AppColors.subtle,
                     fontWeight: FontWeight.w600,
-                    decoration: done ? TextDecoration.lineThrough : TextDecoration.none,
+                    decoration:
+                    done ? TextDecoration.lineThrough : TextDecoration.none,
                     decorationColor: AppColors.subtle,
                   ),
                 ),
@@ -110,7 +130,18 @@ class TaskTile extends StatelessWidget {
               ),
               Checkbox(
                 value: task.done,
-                onChanged: (_) => prov.toggleDone(task.id),
+                // ✅ TaskProvider.toggleDone cần (id, done)
+                onChanged: (v) async {
+                  try {
+                    await prov.toggleDone(task.id, v ?? !task.done);
+                  } catch (e) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Cập nhật trạng thái lỗi: $e')),
+                      );
+                    }
+                  }
+                },
                 side: const BorderSide(color: AppColors.primary, width: 2),
                 checkColor: Colors.white,
                 activeColor: AppColors.primary,

@@ -41,6 +41,13 @@ class _CreateTaskDetailScreenState extends State<CreateTaskDetailScreen> {
     selectedDay = focusedDay;
   }
 
+  @override
+  void dispose() {
+    titleCtrl.dispose();
+    descCtrl.dispose();
+    super.dispose();
+  }
+
   String _fmt(TimeOfDay? t) => t == null ? '--:--' : t.format(context);
 
   Future<void> _pickStart() async {
@@ -80,7 +87,7 @@ class _CreateTaskDetailScreenState extends State<CreateTaskDetailScreen> {
   Future<void> _createTask() async {
     final prov = context.read<TaskProvider>();
 
-    final st = startTime ?? TimeOfDay.now();
+    final st = startTime ?? const TimeOfDay(hour: 8, minute: 0);
     final et = endTime ?? TimeOfDay(hour: (st.hour + 1) % 24, minute: st.minute);
 
     final sDur = Duration(hours: st.hour, minutes: st.minute);
@@ -96,11 +103,11 @@ class _CreateTaskDetailScreenState extends State<CreateTaskDetailScreen> {
     final startDt = _merge(selectedDay, st);
     final endDt = _merge(selectedDay, et);
 
-    prov.addTask(Task(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      date: selectedDay,
-      title: titleCtrl.text.isEmpty ? selectedActivity.name : titleCtrl.text,
-      description: descCtrl.text,
+    await prov.addTask(Task(
+      id: 'auto', // Firestore sẽ tạo auto-id, giá trị này không dùng
+      date: DateTime(selectedDay.year, selectedDay.month, selectedDay.day),
+      title: titleCtrl.text.trim().isEmpty ? selectedActivity.name : titleCtrl.text.trim(),
+      description: descCtrl.text.trim(),
       start: startDt,
       end: endDt,
       activityId: selectedActivity.id,

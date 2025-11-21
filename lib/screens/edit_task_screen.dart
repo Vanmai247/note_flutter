@@ -33,7 +33,6 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
     final prov = context.read<TaskProvider>();
     original = prov.getById(widget.taskId);
 
-    // fill state
     focusedDay  = original.date;
     selectedDay = original.date;
     titleCtrl.text = original.title;
@@ -42,8 +41,14 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
     startTime = TimeOfDay(hour: original.start.hour, minute: original.start.minute);
     endTime   = TimeOfDay(hour: original.end.hour,   minute: original.end.minute);
 
-    // map activity id -> Activity object
     selectedActivity = prov.byActivityId(original.activityId);
+  }
+
+  @override
+  void dispose() {
+    titleCtrl.dispose();
+    descCtrl.dispose();
+    super.dispose();
   }
 
   String _fmt(TimeOfDay? t) => t == null ? '--:--' : t.format(context);
@@ -81,7 +86,7 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
     if (picked != null) setState(() => endTime = picked);
   }
 
-  void _save() {
+  Future<void> _save() async {
     final prov = context.read<TaskProvider>();
     final st = startTime ?? TimeOfDay(hour: original.start.hour, minute: original.start.minute);
     final et = endTime   ?? TimeOfDay(hour: original.end.hour,   minute: original.end.minute);
@@ -97,7 +102,7 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
 
     final updated = Task(
       id: original.id,
-      date: selectedDay,
+      date: DateTime(selectedDay.year, selectedDay.month, selectedDay.day),
       title: titleCtrl.text.trim().isEmpty ? selectedActivity.name : titleCtrl.text.trim(),
       description: descCtrl.text.trim(),
       start: _merge(selectedDay, st),
@@ -106,8 +111,19 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
       done: original.done,
     );
 
-    prov.updateTask(updated);
-    Navigator.pop(context);
+    try {
+      await prov.updateTask(updated);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Saved')),
+      );
+      Navigator.pop(context);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Save failed: $e')),
+      );
+    }
   }
 
   Future<void> _confirmDelete() async {
@@ -124,8 +140,19 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
     );
     if (!mounted) return;
     if (ok == true) {
-      context.read<TaskProvider>().deleteTask(original.id);
-      if (mounted) Navigator.pop(context); // thoát màn sửa
+      try {
+        await context.read<TaskProvider>().deleteTask(original.id);
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Deleted')),
+        );
+        Navigator.pop(context);
+      } catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Delete failed: $e')),
+        );
+      }
     }
   }
 
@@ -280,10 +307,9 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
             ),
             const SizedBox(height: 16),
 
-
             PrimaryButton(
               label: 'Save Changes',
-              onPressed: () async => _save(), // đảm bảo kiểu FutureOr<void>
+              onPressed: () async => _save(),
             ),
           ],
         ),

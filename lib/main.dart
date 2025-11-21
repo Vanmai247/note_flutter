@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
+
 import 'theme.dart';
 import 'providers/task_provider.dart';
 import 'screens/home_screen.dart';
@@ -12,9 +14,14 @@ import 'firebase_options.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+
+  // (khuyến nghị) Bật offline persistence cho Firestore
+  FirebaseFirestore.instance.settings =
+  const Settings(persistenceEnabled: true);
 
   runApp(const TaskyApp());
 }
@@ -31,22 +38,38 @@ class TaskyApp extends StatelessWidget {
         title: 'Tasky',
         theme: buildTheme(),
 
-        // 👉 Dùng StreamBuilder để tự động điều hướng giữa Home và Login
+        // Điều hướng theo trạng thái đăng nhập
         home: StreamBuilder<User?>(
           stream: FirebaseAuth.instance.authStateChanges(),
           builder: (context, snapshot) {
+            // Đang chờ Firebase trả về trạng thái
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Scaffold(
                 body: Center(child: CircularProgressIndicator()),
               );
             }
 
-            // Nếu có user đăng nhập → vào HomeScreen
+            // Nếu có lỗi trong quá trình xác thực
+            if (snapshot.hasError) {
+              return Scaffold(
+                body: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24.0),
+                    child: Text(
+                      'Auth error: ${snapshot.error}',
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+              );
+            }
+
+            // Có user → vào Home
             if (snapshot.hasData) {
               return const HomeScreen();
             }
 
-            // Nếu chưa đăng nhập → vào LoginScreen
+            // Chưa đăng nhập → vào Login
             return const LoginScreen();
           },
         ),
@@ -56,6 +79,8 @@ class TaskyApp extends StatelessWidget {
           '/register': (_) => const RegisterScreen(),
           '/forgot': (_) => const ForgotPasswordScreen(),
         },
+
+        // Nếu route lạ → về Home (có stream guard ở trên)
         onUnknownRoute: (_) =>
             MaterialPageRoute(builder: (_) => const HomeScreen()),
       ),
