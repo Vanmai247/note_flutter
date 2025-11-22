@@ -77,6 +77,17 @@ class AppDrawer extends StatelessWidget {
               },
             ),
 
+
+            if (user != null)
+              ListTile(
+                leading: const Icon(Icons.person_outline),
+                title: const Text('Hồ sơ cá nhân'),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.pushNamed(context, '/profile');
+                },
+              ),
+
             // Nếu chưa đăng nhập -> hiển thị nút "Đăng nhập"
             if (user == null)
               ListTile(

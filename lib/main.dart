@@ -11,6 +11,7 @@ import 'screens/login_screen.dart';
 import 'screens/register_screen.dart';
 import 'screens/forgot_password_screen.dart';
 import 'firebase_options.dart';
+import 'screens/profile_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -78,6 +79,7 @@ class TaskyApp extends StatelessWidget {
           '/login': (_) => const LoginScreen(),
           '/register': (_) => const RegisterScreen(),
           '/forgot': (_) => const ForgotPasswordScreen(),
+          '/profile': (_) => const ProfileScreen(),
         },
 
         // Nếu route lạ → về Home (có stream guard ở trên)
