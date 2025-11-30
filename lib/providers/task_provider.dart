@@ -115,7 +115,7 @@ class TaskProvider extends ChangeNotifier {
 
     final id = doc.id;
 
-    // 🔔 lập lịch thông báo theo giờ start
+    // lập lịch thông báo theo giờ start
     final notiId = _notificationIdFromTaskId(id);
     await NotificationService.scheduleTaskNotification(
       id: notiId,
@@ -146,7 +146,7 @@ class TaskProvider extends ChangeNotifier {
       'updatedAt': FieldValue.serverTimestamp(),
     });
 
-    // 🔔 cập nhật lại thông báo nếu đổi giờ / đổi nội dung
+    // cập nhật lại thông báo nếu đổi giờ / đổi nội dung
     final notiId = _notificationIdFromTaskId(t.id);
     await NotificationService.cancelNotification(notiId);
     await NotificationService.scheduleTaskNotification(

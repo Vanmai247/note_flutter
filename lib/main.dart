@@ -13,7 +13,7 @@ import 'screens/forgot_password_screen.dart';
 import 'firebase_options.dart';
 import 'screens/profile_screen.dart';
 
-// ⬇️ Thêm import notification service
+// Thêm import notification service
 import 'services/notification_service.dart';
 
 Future<void> main() async {
@@ -27,7 +27,7 @@ Future<void> main() async {
   FirebaseFirestore.instance.settings =
   const Settings(persistenceEnabled: true);
 
-  // ⬇️ Khởi tạo local notification + xin quyền thông báo
+  // Khởi tạo local notification + xin quyền thông báo
   await NotificationService.init();
   await NotificationService.requestPermission();
 

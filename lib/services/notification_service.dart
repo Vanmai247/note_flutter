@@ -29,7 +29,7 @@ class NotificationService {
     await androidImpl?.requestNotificationsPermission();
   }
 
-  /// 👉 Hàm test thông báo ngay lập tức (để thử xem plugin có chạy không)
+  /// Hàm test thông báo ngay lập tức (để thử xem plugin có chạy không)
   static Future<void> showTestNow() async {
     await _plugin.show(
       9999,

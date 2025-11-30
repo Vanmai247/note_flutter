@@ -22,7 +22,7 @@ class PrimaryButton extends StatelessWidget {
             borderRadius: BorderRadius.circular(14),
           ),
         ),
-        // 👇 Bọc callback để Flutter chấp nhận async function
+        // Bọc callback để Flutter chấp nhận async function
         onPressed: onPressed == null ? null : () async => await onPressed!(),
         child: Text(
           label,
