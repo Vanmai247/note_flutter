@@ -1,9 +1,25 @@
-import 'package:flutter/material.dart';
+import 'dart:io';
+
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 import '../theme.dart';
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
+
+  Future<File?> _loadAvatarFile() async {
+    final prefs = await SharedPreferences.getInstance();
+    final path = prefs.getString('avatarPath');
+    if (path != null) {
+      final file = File(path);
+      if (file.existsSync()) {
+        return file;
+      }
+    }
+    return null;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -31,10 +47,25 @@ class AppDrawer extends StatelessWidget {
               padding: const EdgeInsets.all(20),
               child: Row(
                 children: [
-                  const CircleAvatar(
-                    radius: 26,
-                    backgroundColor: Colors.white,
-                    child: Icon(Icons.person, color: AppColors.primary, size: 30),
+                  FutureBuilder<File?>(
+                    future: _loadAvatarFile(),
+                    builder: (context, snapshot) {
+                      final file = snapshot.data;
+
+                      return CircleAvatar(
+                        radius: 26,
+                        backgroundColor: Colors.white,
+                        backgroundImage:
+                        file != null ? FileImage(file) : null,
+                        child: file == null
+                            ? const Icon(
+                          Icons.person,
+                          color: AppColors.primary,
+                          size: 30,
+                        )
+                            : null,
+                      );
+                    },
                   ),
                   const SizedBox(width: 14),
                   Expanded(
@@ -42,7 +73,9 @@ class AppDrawer extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          user != null ? (user.email ?? 'Người dùng') : 'Khách',
+                          user != null
+                              ? (user.email ?? 'Người dùng')
+                              : 'Khách',
                           style: const TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.w700,
@@ -51,7 +84,9 @@ class AppDrawer extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                         Text(
-                          user != null ? 'Đang hoạt động' : 'Chưa đăng nhập',
+                          user != null
+                              ? 'Đang hoạt động'
+                              : 'Chưa đăng nhập',
                           style: const TextStyle(
                             color: Colors.white70,
                             fontSize: 13,
@@ -73,10 +108,10 @@ class AppDrawer extends StatelessWidget {
               title: const Text('Trang chủ'),
               onTap: () {
                 Navigator.pop(context);
-                Navigator.pushNamedAndRemoveUntil(context, '/', (_) => false);
+                Navigator.pushNamedAndRemoveUntil(
+                    context, '/', (_) => false);
               },
             ),
-
 
             if (user != null)
               ListTile(
@@ -102,24 +137,29 @@ class AppDrawer extends StatelessWidget {
             // Nếu đã đăng nhập -> hiển thị nút "Đăng xuất"
             if (user != null)
               ListTile(
-                leading: const Icon(Icons.logout, color: Colors.redAccent),
+                leading:
+                const Icon(Icons.logout, color: Colors.redAccent),
                 title: const Text('Đăng xuất'),
                 onTap: () async {
                   final confirm = await showDialog<bool>(
                     context: context,
                     builder: (_) => AlertDialog(
                       title: const Text('Xác nhận'),
-                      content: const Text('Bạn có chắc muốn đăng xuất không?'),
+                      content: const Text(
+                          'Bạn có chắc muốn đăng xuất không?'),
                       actions: [
                         TextButton(
-                          onPressed: () => Navigator.pop(context, false),
+                          onPressed: () =>
+                              Navigator.pop(context, false),
                           child: const Text('Huỷ'),
                         ),
                         TextButton(
-                          onPressed: () => Navigator.pop(context, true),
+                          onPressed: () =>
+                              Navigator.pop(context, true),
                           child: const Text(
                             'Đăng xuất',
-                            style: TextStyle(color: Colors.redAccent),
+                            style: TextStyle(
+                                color: Colors.redAccent),
                           ),
                         ),
                       ],
