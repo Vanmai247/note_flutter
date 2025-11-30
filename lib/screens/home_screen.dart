@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+
 import '../providers/task_provider.dart';
 import '../theme.dart';
 import '../widgets/task_tile.dart';
 import '../widgets/date_pills.dart';
 import '../widgets/app_drawer.dart';
 import 'create_task_screen.dart';
+import '../services/notification_service.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -16,10 +18,22 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final prov = context.watch<TaskProvider>();
     final tasks = prov.tasksFor(prov.selectedDay);
-    final user  = FirebaseAuth.instance.currentUser;
+    final user = FirebaseAuth.instance.currentUser;
 
     return Scaffold(
+      // ❌ KHÔNG DÙNG appBar NỮA
+      // appBar: AppBar(
+      //   title: const Text('Tasky'),
+      // ),
+
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          NotificationService.showTestNow();
+        },
+        child: const Icon(Icons.notifications),
+      ),
       drawer: const AppDrawer(),
+
       body: Builder(
         builder: (ctx) => SafeArea(
           child: Padding(
@@ -27,7 +41,7 @@ class HomeScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Header
+                // 👉 Header duy nhất
                 Row(
                   children: [
                     IconButton(
@@ -37,17 +51,17 @@ class HomeScreen extends StatelessWidget {
                     const Spacer(),
                     Text(
                       DateFormat('d MMM').format(prov.selectedDay),
-                      style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 18),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 18,
+                      ),
                     ),
                     const Spacer(),
-
-                    //Nút menu (có Đăng xuất)
                     PopupMenuButton<String>(
                       icon: const Icon(Icons.more_vert),
                       onSelected: (v) async {
                         if (v == 'logout') {
                           await FirebaseAuth.instance.signOut();
-                          // Stream authStateChanges() trong main.dart sẽ tự đưa về Login
                         }
                       },
                       itemBuilder: (_) => [
@@ -60,9 +74,10 @@ class HomeScreen extends StatelessWidget {
                     ),
                   ],
                 ),
+
                 const SizedBox(height: 18),
 
-                // Today + Add
+                // Today card
                 Container(
                   decoration: BoxDecoration(
                     color: AppColors.primary,
@@ -75,15 +90,25 @@ class HomeScreen extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text('Today', style: TextStyle(color: Colors.white70)),
+                            const Text('Today',
+                                style: TextStyle(color: Colors.white70)),
                             Text(
                               '${tasks.length} Tasks',
-                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 18),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w700,
+                                fontSize: 18,
+                              ),
                             ),
                             if (user != null) ...[
                               const SizedBox(height: 6),
-                              Text(user.email ?? '',
-                                  style: const TextStyle(color: Colors.white70, fontSize: 12)),
+                              Text(
+                                user.email ?? '',
+                                style: const TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 12,
+                                ),
+                              ),
                             ],
                           ],
                         ),
@@ -92,11 +117,15 @@ class HomeScreen extends StatelessWidget {
                         style: FilledButton.styleFrom(
                           backgroundColor: Colors.white,
                           foregroundColor: AppColors.primary,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                         ),
                         onPressed: () => Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (_) => const CreateTaskScreen()),
+                          MaterialPageRoute(
+                            builder: (_) => const CreateTaskScreen(),
+                          ),
                         ),
                         child: const Text('Add New'),
                       ),
@@ -108,7 +137,10 @@ class HomeScreen extends StatelessWidget {
                 DatePills(base: prov.selectedDay),
 
                 const SizedBox(height: 14),
-                const Text('My Tasks', style: TextStyle(fontWeight: FontWeight.w700)),
+                const Text(
+                  'My Tasks',
+                  style: TextStyle(fontWeight: FontWeight.w700),
+                ),
                 const SizedBox(height: 8),
 
                 Expanded(

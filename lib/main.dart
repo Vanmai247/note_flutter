@@ -13,6 +13,9 @@ import 'screens/forgot_password_screen.dart';
 import 'firebase_options.dart';
 import 'screens/profile_screen.dart';
 
+// ⬇️ Thêm import notification service
+import 'services/notification_service.dart';
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -20,9 +23,13 @@ Future<void> main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  // (khuyến nghị) Bật offline persistence cho Firestore
+  // Bật offline persistence cho Firestore
   FirebaseFirestore.instance.settings =
   const Settings(persistenceEnabled: true);
+
+  // ⬇️ Khởi tạo local notification + xin quyền thông báo
+  await NotificationService.init();
+  await NotificationService.requestPermission();
 
   runApp(const TaskyApp());
 }

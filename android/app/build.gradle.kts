@@ -10,9 +10,11 @@ android {
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
+    // ⭐ Bật Java 11 + core library desugaring
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
+        isCoreLibraryDesugaringEnabled = true   // <— dòng quan trọng
     }
 
     kotlinOptions {
@@ -29,6 +31,7 @@ android {
 
     buildTypes {
         release {
+            // tạm dùng debug signing, sau này muốn build release thật thì đổi lại
             signingConfig = signingConfigs.getByName("debug")
         }
     }
@@ -42,8 +45,11 @@ dependencies {
     // Import Firebase BoM (đồng bộ version giữa các thư viện Firebase)
     implementation(platform("com.google.firebase:firebase-bom:34.3.0"))
 
-    // Dưới đây là các thư viện Firebase bạn muốn dùng:
-    implementation("com.google.firebase:firebase-analytics")   // thống kê (tùy chọn)
-    implementation("com.google.firebase:firebase-auth")        // đăng nhập / đăng ký
-    implementation("com.google.firebase:firebase-firestore")   // database lưu task
+    // Các thư viện Firebase
+    implementation("com.google.firebase:firebase-analytics")
+    implementation("com.google.firebase:firebase-auth")
+    implementation("com.google.firebase:firebase-firestore")
+
+    // ⭐ Thêm dòng này để fix lỗi flutter_local_notifications cần desugaring
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
 }
