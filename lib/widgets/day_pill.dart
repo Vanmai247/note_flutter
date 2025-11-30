@@ -18,6 +18,7 @@ class DayPill extends StatelessWidget {
   Widget build(BuildContext context) {
     final bg = selected ? const Color(0xFF8B6CF3) : const Color(0xFFFFFFFF);
     final fg = selected ? Colors.white : const Color(0xFF2A2A2A);
+
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
@@ -43,19 +44,24 @@ class DayPill extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(line1,
-                style: TextStyle(
-                  color: fg,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 16,
-                )),
+            Text(
+              line1,
+              style: TextStyle(
+                color: fg,
+                fontWeight: FontWeight.w700,
+                fontSize: 16,
+              ),
+            ),
             const SizedBox(height: 2),
-            Text(line2,
-                style: TextStyle(
-                  color: selected ? Colors.blue.withValues(alpha: 0.5) : const Color(0xFF9AA0A6),
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                )),
+
+            Text(
+              line2,
+              style: TextStyle(
+                color: selected ? Colors.white : const Color(0xFF9AA0A6),
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ],
         ),
       ),

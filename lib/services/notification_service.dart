@@ -34,7 +34,7 @@ class NotificationService {
     await _plugin.show(
       9999,
       'Test Tasky',
-      'Nếu bạn thấy được thông báo này là hệ thống OK rồi 👍',
+      'Thông báo thành công',
       const NotificationDetails(
         android: AndroidNotificationDetails(
           'tasky_channel',
